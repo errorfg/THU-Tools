@@ -1,4 +1,3 @@
-#!/usr/local/Caskroom/miniconda/base/bin/python
 
 from typing import List, Tuple
 import requests
@@ -8,6 +7,8 @@ from urllib.parse import quote
 import os
 import click
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
+from requests.adapters import HTTPAdapter
 
 
 def fs(bytes: int) -> str:
@@ -59,37 +60,38 @@ def search_entries(
             )
 
 
-def download_entries(
-    root_dir_name: str, dir_list: List[str], file_list: List[Tuple[str, str, int]]
-) -> None:
+def download_file(url: str, path: str, size: int, bar):
+    dl_num = 0
+    s = requests.Session()
+    s.mount('http://', HTTPAdapter(max_retries=3))
+    s.mount('https://', HTTPAdapter(max_retries=3))
+    req = s.get(url, stream=True)
+    with open(path, "wb") as file_output:
+        with tqdm(total=size, desc=path, leave=False) as pbar:
+            for chunk in req.iter_content(512 * 1024):
+                dl_num += len(chunk)
+                file_output.write(chunk)
+                pbar.update(len(chunk))
+                bar.update(len(chunk))
+                pbar.set_postfix_str(f"{fs(dl_num)}/{fs(size)}")
+
+
+def download_entries(root_dir_name: str, dir_list: List[str], file_list: List[Tuple[str, str, int]], max_workers: int) -> None:
     for local_path in dir_list:
         os.makedirs(local_path, exist_ok=True)
     size_sum = sum([size for _, _, size in file_list])
-    dl_sum = 0
     with tqdm(total=size_sum, desc=root_dir_name, position=1) as bar:
-        for index, (remote_url, local_path, size) in enumerate(file_list):
-            dl_num = 0
-            req = requests.get(remote_url, stream=True)
-            with open(local_path, "wb") as file_output:
-                with tqdm(total=size, desc=local_path, leave=False) as pbar:
-                    for chunk in req.iter_content(512 * 1024):
-                        dl_num += len(chunk)
-                        dl_sum += len(chunk)
-                        file_output.write(chunk)
-                        pbar.update(len(chunk))
-                        bar.update(len(chunk))
-                        pbar.set_postfix_str(f"{fs(dl_num)}/{fs(size)}")
-                        bar.set_postfix_str(f"{fs(dl_sum)}/{fs(size_sum)}")
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            for remote_url, local_path, size in file_list:
+                executor.submit(download_file, remote_url, local_path, size, bar)
+
 
 
 @click.command()
-@click.option(
-    "--exclude-exts",
-    default="",
-    help="Comma-separated list of file extensions, e.g. mp4,mp3 .",
-)
+@click.option("--exclude-exts", default="", help="Comma-separated list of file extensions, e.g. mp4,mp3 .")
+@click.option("--max-workers", default=5, help="Maximum number of concurrent downloads")
 @click.argument("url", type=str)
-def main(exclude_exts: str, url: str):
+def main(exclude_exts: str, url: str, max_workers: int):
     """Recursively download files from the Tsinghua Cloud."""
     exclude_ext_list: List[str] = exclude_exts.split(",")
 
@@ -110,7 +112,7 @@ def main(exclude_exts: str, url: str):
     search_entries(exclude_ext_list, share_id, root_dir_name, "/", dir_list, file_list)
     print()
 
-    download_entries(root_dir_name, dir_list, file_list)
+    download_entries(root_dir_name, dir_list, file_list, max_workers)
 
 
 main()
