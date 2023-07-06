@@ -1,4 +1,3 @@
-from asyncio import as_completed
 from typing import List, Tuple
 import requests
 import json
@@ -7,6 +6,7 @@ from urllib.parse import quote
 import os
 import click
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
 from requests.adapters import HTTPAdapter
 from rich.progress import Progress
 import time
