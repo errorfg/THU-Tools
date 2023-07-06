@@ -12,8 +12,10 @@ Usage: thu-cloud-dl.py [OPTIONS] URL
   Recursively download files from the Tsinghua Cloud.
 
 Options:
-  --exclude-exts TEXT  Comma-separated list of file extensions, e.g. mp4,mp3 .
-  --help               Show this message and exit.
+  --exclude-exts TEXT Comma-separated list of file extensions, e.g. mp4,mp3 .
+  --max-workers INT Maximum number of concurrent downloads.
+  --help Show this message and exit.
+这段代码的 `--max-workers` 选项用来设置并发下载的最大数量，默认为5。如果网络环境允许，可以适当提高这个值以增加下载速度。
 
 >>> python thu-cloud-dl.py --exclude-exts dmg,exe,gz https://cloud.tsinghua.edu.cn/d/xxxxxxxxxxxxxxxxxxxx/
 共找到xx个满足条件的文件，总大小为xx.xxGB。
