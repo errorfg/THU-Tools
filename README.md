@@ -2,10 +2,11 @@
 
 ## thu-cloud-dl.py
 
-方便地递归下载清华云盘的方式，纯命令行环境执行，需要预先安装 `click`、`tqdm`、`requests` 包。已修改为并发下载
+方便地递归下载清华云盘的方式，纯命令行环境执行，需要预先安装 `click`、`rich`、`asyncio`、`requests` 包。已修改为并发下载
 
 使用方式：
-```
+
+```shell
 >>> python thu-cloud-dl.py --help
 Usage: thu-cloud-dl.py [OPTIONS] URL
 
@@ -17,8 +18,8 @@ Options:
   --help Show this message and exit.
 这段代码的 `--max-workers` 选项用来设置并发下载的最大数量，默认为5。如果网络环境允许，可以适当提高这个值以增加下载速度。
 
->>> python thu-cloud-dl.py --exclude-exts dmg,exe,gz https://cloud.tsinghua.edu.cn/d/xxxxxxxxxxxxxxxxxxxx/
-共找到xx个满足条件的文件，总大小为xx.xxGB。
-根目录/子目录/.../.../文件名:  45%|██████████▊             | 99090432/219518163 [00:20<00:19, 6201313.84it/s, 94.50MB/209.35MB]
-根目录:   3%|█▎                                          | 100395635/3604065554 [00:22<09:25, 6200230.79it/s, 95.74MB/3.36GB]
 ```
+
+效果图
+
+![CleanShot 2023-07-06 at 22.54.13@2x](README.assets/CleanShot%202023-07-06%20at%2022.54.13@2x.png)
